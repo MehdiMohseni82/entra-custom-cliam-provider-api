@@ -1,0 +1,35 @@
+@startuml
+actor User
+participant "Frontend App" as FE
+participant "SSO Provider\n(Entra ID)" as SSO
+participant "Backend API" as BE
+participant "Authorization Service" as AZ
+
+User -> FE : Open app
+FE -> SSO : Redirect for login
+User -> SSO : Enter credentials
+SSO -> User : Issue JWT token
+User -> FE : Return to app with token
+
+FE -> AZ : Request permissions (with token)
+note right of FE
+(1) Permissions must be requested on almost every call.\nRisk: if skipped, users can manipulate their access.
+end note
+
+FE -> BE : Call API (send token)
+BE -> BE : Validate token
+
+BE -> AZ : Request permissions (with token)
+note right of BE
+(2) Duplicate permission check in backend.\nThis adds latency and is repeated for every request.
+end note
+
+BE -> BE : Look up permissions result
+BE -> FE : Respond with allowed features/permissions
+
+note over FE,BE
+(3) Two sources of truth:\nThe token (for authentication) and a separate call for permissions (authorization).\nThis breaks the "token as single point of truth" principle.
+end note
+
+FE -> User : Render app based on permissions
+@enduml

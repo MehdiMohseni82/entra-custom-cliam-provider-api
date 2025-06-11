@@ -1,0 +1,17 @@
+@startuml
+actor User
+participant "Frontend App" as FE
+participant "SSO Provider (e.g. Entra ID)" as SSO
+participant "Backend API" as BE
+
+User -> FE : Open app
+FE -> SSO : Redirect user for login
+User -> SSO : Enter credentials
+SSO -> User : Issue authentication token (JWT)
+User -> FE : Return to app with token
+FE -> BE : Call API (send token)
+BE -> BE : Validate token
+BE -> BE : Look up permissions in DB
+BE -> FE : Respond with allowed features/permissions
+FE -> User : Render app based on permissions
+@enduml

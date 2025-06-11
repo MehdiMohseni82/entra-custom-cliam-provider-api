@@ -1,0 +1,34 @@
+@startuml
+actor User
+participant "Frontend App (Angular, etc.)" as FE
+participant "App Registration\n(for your app)" as AppReg
+participant "Enterprise Application\n(for your app)" as EntApp
+participant "Microsoft Entra ID" as Entra
+participant "Custom Claim Extension" as Extension
+participant "App Registration\n(for Claim Extension API)" as ExtReg
+participant "Your API\n(Custom Claim Provider)" as CCP
+
+User -> FE : Open app
+FE -> Entra : Authenticate (OIDC/SAML via AppReg)
+Entra -> User : Show login page
+User -> Entra : Enter credentials
+Entra -> Extension : TokenIssuanceStart event
+Extension -> CCP : Call custom claim endpoint\n(Secured with JWT from ExtReg)
+CCP -> CCP : Validate JWT (audience = ExtReg)
+CCP -> Extension : Return custom claims
+Extension -> Entra : Return claims to Entra
+Entra -> FE : Issue ID Token (with custom claims)
+FE -> FE : Use ID Token for business logic
+
+note right of Extension
+The Custom Claim Extension uses\nits own App Registration (ExtReg)\nto authenticate with your API.
+end note
+
+note right of CCP
+Your API (CCP) validates that incoming requests\nare from Entra using ExtReg as the allowed audience.
+end note
+
+note right of FE
+Your frontend app consumes custom claims\nfrom the ID Token issued by Entra.
+end note
+@enduml

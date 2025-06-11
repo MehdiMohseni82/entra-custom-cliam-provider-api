@@ -1,0 +1,26 @@
+@startuml
+actor User
+participant "Frontend App" as FE
+participant "App Registration\n(Your App)" as AppReg
+participant "Enterprise App\n(Your App)" as EntApp
+participant "Microsoft Entra ID" as Entra
+participant "Custom Claim Provider\n(API)" as CCP
+participant "App Registration\n(Custom Claim API)" as CCPReg
+
+User -> FE : Open application
+FE -> Entra : Request login (OIDC/SAML)\n(via AppReg)
+Entra -> User : Show login page
+User -> Entra : Enter credentials
+Entra -> CCP : Call custom claim provider\n(authenticated using CCPReg)
+CCP -> Entra : Return custom claims
+Entra -> FE : Issue ID Token (with custom claims)
+FE -> FE : Use ID Token for API calls, etc.
+
+note right of Entra
+Entra validates CCP endpoint using its own\nApp Registration (CCPReg) and includes claims\nfrom the CCP response in the issued token.
+end note
+
+note right of FE
+The frontend app (and backend, if needed)\ncan now access the custom claims from\nthe ID Token.
+end note
+@enduml
